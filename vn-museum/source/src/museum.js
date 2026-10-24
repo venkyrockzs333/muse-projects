@@ -1,8 +1,9 @@
 // VN Museum — expanded cinematic world.
-// Lighting philosophy (pipeline, not brightness stacking):
-//  - walls are warm mid-tones, never white; floors are dark polished stone
-//  - hemisphere fill is controlled, lights are layered (base / architectural
-//    / exhibit / follow-spot / accent) — see main.js for the light rig
+// Lighting philosophy (brighter overall, still not flat white):
+//  - walls are lighter warm tones, floors are mid-tone polished stone
+//    (both lifted from the previous darker palette so details read)
+//  - hemisphere fill is stronger, lights are layered (base / architectural
+//    / exhibit / follow-spot / colourful accent) — see main.js
 //  - bloom threshold is high so only gold / lamp highlights bloom
 //  - materials are MeshStandardMaterial (PBR) with calibrated roughness:
 //    marble is matte stone (rough ~0.3, metal 0.05), never chrome;
@@ -38,7 +39,7 @@ function column(parent, x, z, h, material, yBase = 0) {
 }
 function placeholderTex(i, caption) {
   return canvasTex(512, 384, (g, w, h) => {
-    g.fillStyle = '#2b2118'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#3d332a'; g.fillRect(0, 0, w, h);
     g.strokeStyle = '#c9993f'; g.lineWidth = 6; g.strokeRect(18, 18, w - 36, h - 36);
     g.fillStyle = '#e8dcc4'; g.font = 'italic 30px Georgia'; g.textAlign = 'center';
     g.fillText('Your photo here', w / 2, h / 2 - 10);
@@ -93,16 +94,16 @@ export function buildMuseum(scene, config, photoTextures) {
   const group = new THREE.Group(); scene.add(group);
 
   // Shared PBR materials (calibrated, reused everywhere).
-  const stone = std(0x8a7a66, 0.85);          // honed stone facade
-  const marble = std(0xb8a88e, 0.32, 0.05);   // warm marble, matte — never chrome
-  const marbleDark = std(0x5c5145, 0.4, 0.05);
+  const stone = std(0x9c8c78, 0.85);          // honed stone facade, lifted
+  const marble = std(0xcabfa6, 0.32, 0.05);   // warm marble, matte — never chrome
+  const marbleDark = std(0x6e6355, 0.4, 0.05);
   const gold = std(0xc9993f, 0.35, 0.8);      // brushed champagne gold (trim/sign/handles only)
   const goldBright = std(0xd4af6a, 0.3, 0.85);
   const darkWood = std(0x4a2f1d, 0.7);
-  const wallMat = std(0x4a3d31, 0.9);         // warm mid-tone painted wall
+  const wallMat = std(0x6b5a48, 0.9);         // lighter warm painted wall
   const wallTex = canvasTex(8, 256, (g, w, h) => {
     const gr = g.createLinearGradient(0, 0, 0, h);
-    gr.addColorStop(0, '#5a4a3a'); gr.addColorStop(0.7, '#4a3d31'); gr.addColorStop(1, '#33291f');
+    gr.addColorStop(0, '#7a6a58'); gr.addColorStop(0.7, '#6b5a48'); gr.addColorStop(1, '#4a3d31');
     g.fillStyle = gr; g.fillRect(0, 0, w, h);
   });
   wallTex.wrapS = wallTex.wrapT = THREE.RepeatWrapping;
@@ -112,7 +113,7 @@ export function buildMuseum(scene, config, photoTextures) {
 
   // ---- exterior plaza (x -12..12, z 1.2..24) ----
   const plazaTex = canvasTex(512, 512, (g, w, h) => {
-    g.fillStyle = '#3d352c'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#4d4438'; g.fillRect(0, 0, w, h);
     g.strokeStyle = 'rgba(0,0,0,0.35)'; g.lineWidth = 3;
     for (let i = 0; i <= 8; i++) { g.beginPath(); g.moveTo(i * 64, 0); g.lineTo(i * 64, h); g.stroke(); g.beginPath(); g.moveTo(0, i * 64); g.lineTo(w, i * 64); g.stroke(); }
   });
@@ -191,8 +192,8 @@ export function buildMuseum(scene, config, photoTextures) {
 
   // ---- interior floors / ceilings ----
   const floorTex = canvasTex(256, 256, (g, w, h) => {
-    g.fillStyle = '#241e18'; g.fillRect(0, 0, w, h);
-    g.strokeStyle = 'rgba(201,153,63,0.25)'; g.lineWidth = 2; g.strokeRect(4, 4, w - 8, h - 8);
+    g.fillStyle = '#3a322a'; g.fillRect(0, 0, w, h);
+    g.strokeStyle = 'rgba(201,153,63,0.35)'; g.lineWidth = 2; g.strokeRect(4, 4, w - 8, h - 8);
   });
   floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping; floorTex.repeat.set(4, 8);
   function floorPlane(w, d, x, z, mat) {
@@ -203,7 +204,7 @@ export function buildMuseum(scene, config, photoTextures) {
   floorPlane(18, 31.4, 0, -16.3, interiorFloorMat);            // lobby + central hall
   floorPlane(9, 16, -13.5, -20, interiorFloorMat);             // west gallery
   floorPlane(9, 16, 13.5, -20, interiorFloorMat);              // east gallery
-  const ceilMat = std(0x17120e, 1);
+  const ceilMat = std(0x2a231c, 1);
   function ceilPlane(w, d, x, z, y) {
     const c = new THREE.Mesh(new THREE.PlaneGeometry(w, d), ceilMat);
     c.rotation.x = Math.PI / 2; c.position.set(x, y, z); group.add(c); return c;
@@ -248,6 +249,13 @@ export function buildMuseum(scene, config, photoTextures) {
     f.position.set(x, y, z); group.add(f);
   }
   for (const [x, z, y] of [[-4, -4, 6.9], [4, -4, 6.9], [-4, -10, 6.9], [4, -10, 6.9], [-4, -16, 5.9], [4, -16, 5.9], [-4, -24, 5.9], [4, -24, 5.9], [-13.5, -16, 4.4], [-13.5, -24, 4.4], [13.5, -16, 4.4], [13.5, -24, 4.4], [-3, 6, 5.4], [3, 6, 5.4]]) fixture(x, y, z);
+  // Colourful accent strips (match the accent lights in main.js):
+  // one rose strip on the west gallery wall, one teal strip on the
+  // east gallery wall — small, restrained, not a rainbow wash.
+  for (const [x, ry, color] of [[-17.9, Math.PI / 2, 0xff7a9a], [17.9, -Math.PI / 2, 0x7adfd0]]) {
+    const strip = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.14), new THREE.MeshBasicMaterial({ color }));
+    strip.position.set(x, 3.2, -20); strip.rotation.y = ry; group.add(strip);
+  }
   // Wall sconces (warm, restrained).
   for (const [x, z, ry] of [[-8.9, -9, 0], [8.9, -9, 0], [-8.9, -27, 0], [8.9, -27, 0]]) {
     const s = box(group, 0.12, 0.5, 0.25, gold, x, 2.8, z); void s; void ry;

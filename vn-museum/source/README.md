@@ -8,16 +8,21 @@ bench sit/dance, lock-door story, petals, adaptive quality and the
 
 ## What changed
 
-**Lighting (pipeline, not brightness stacking)**
-- ACES tone mapping, exposure 1.05, sRGB output, fog 30–85 m.
-- Layered lights: controlled hemisphere fill (0.5, warm sky / dark
-  ground), cool outdoor directional, warm forecourt lamps, one
+**Lighting (brighter overall, still not flat white)**
+- ACES tone mapping, exposure 1.15, sRGB output, fog 30–85 m.
+- Layered lights: stronger hemisphere fill (0.95, warm sky / lighter
+  ground), brighter outdoor directional, warm forecourt lamps, one
   shadow-casting lobby key spot (1024), warm central spot, two
-  warm-white sign spots, and 8 neutral-white exhibit zone spots.
-- Warm-white for architecture, neutral-white for exhibits. Bloom
-  stays restrained (threshold 0.85, strength 0.32) and is the first
-  thing adaptive quality turns off. Walls are warm mid-tones, floors
-  dark polished stone — no whiteout, no crushed-black corridors.
+  warm-white sign spots, and 8 neutral-white exhibit zone spots
+  (intensity 70, up from 45).
+- Tasteful colour accents (not a rainbow wash): rose in the west
+  gallery, teal in the east gallery, soft lavender in the lobby,
+  plus matching rose/teal accent strips on the gallery walls.
+  Warm light still dominates.
+- Bloom stays restrained (threshold 0.80, strength 0.38) and is the
+  first thing adaptive quality turns off. Walls and floors are
+  lighter warm tones than before, so details read clearly, while
+  ACES keeps highlights from blowing out into whiteout.
 
 **Player-following spotlight**
 - One SpotLight + one target, created once in `main.js` and reused
@@ -88,7 +93,7 @@ bench sit/dance, lock-door story, petals, adaptive quality and the
 
 Names, passcode, hint, placard text, photos, bubble lines, music.
 Current content is still the base placeholders (Venky / "Your Love",
-passcode `1234`, CC0 car photos) — replace before gifting. Photos go
+passcode `1302`, CC0 car photos) — replace before gifting. Photos go
 in `public/photos/` (WebP/JPG, ≤1280 px). Note for GitHub upload:
 binary photos cannot be pushed via the Muse GitHub API path — they
 need web-UI upload, as with the previous project.
@@ -113,11 +118,18 @@ raw source directory as the site. `?low` forces the low tier,
   with the nearest exhibit, Esc to close the viewer.
 - Near a frame: 🖼️ View appears. Near the bench: 🪑 Sit together.
   Inside: 💃 Dance with me (partner must be within 3.5 m).
+- **Kiss:** sit together on the bench first — a 💋 Kiss button then
+  appears (and only then). Tap it and both characters lean toward
+  each other, heads turn and meet, floating hearts appear during
+  the ~2.2 s hold, then they ease back to the normal seated pose
+  (total ~3.8 s). Standing up, dancing, or leaving the bench
+  cancels it cleanly with no stuck pose. Tasteful lean-in only —
+  no explicit content.
 
 ## Files
 
 - `src/main.js` — orchestration, lighting rig, follow spotlight,
-  auto double doors, one RAF loop
+  auto double doors, kiss timeline + floating hearts, one RAF loop
 - `src/museum.js` — VN Museum architecture, sign, doors, galleries,
   frames, fixtures, plinths, petals
 - `src/world.js` — zones, side-gallery gates, door corridor,

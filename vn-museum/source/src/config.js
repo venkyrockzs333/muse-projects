@@ -8,7 +8,7 @@ export const CONFIG = {
   title: 'VN Museum',
 
   // Secret code for the locked door (digits or letters).
-  passcode: '1234',           // PLACEHOLDER
+  passcode: '1302',
   hint: 'Hint: the day I proposed (DDMM)', // PLACEHOLDER
 
   // Text on the entrance placard (opens in the "Viewing" overlay).

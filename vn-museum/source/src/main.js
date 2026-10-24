@@ -43,7 +43,7 @@ renderer.setPixelRatio(dpr);
 renderer.setSize(innerWidth, innerHeight, false);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.05; // ACES + 1.05 keeps midtones readable without white-out on the larger interior
+renderer.toneMappingExposure = 1.15; // Brighter overall (was 1.05): lifts dark areas while ACES keeps highlights from blowing out
 renderer.shadowMap.enabled = !weak;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 let running = true;
@@ -51,14 +51,14 @@ $('c').addEventListener('webglcontextlost', (e) => { e.preventDefault(); running
 $('c').addEventListener('webglcontextrestored', () => location.reload(), false);
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x17120e);
-scene.fog = new THREE.Fog(0x17120e, 30, 85);
+scene.background = new THREE.Color(0x241c14); // lifted from near-black so exteriors read clearly
+scene.fog = new THREE.Fog(0x241c14, 30, 85);
 const camera = new THREE.PerspectiveCamera(isTouch ? 62 : 55, innerWidth / innerHeight, 0.1, 120);
 
 // Post: bloom only on bright highlights (threshold 0.85, strength 0.32).
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
-const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth / 2, innerHeight / 2), 0.32, 0.5, 0.85);
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth / 2, innerHeight / 2), 0.38, 0.5, 0.80);
 composer.addPass(bloom);
 composer.addPass(new OutputPass());
 let qualityLevel = weak ? 1 : 0; // 0 full, 1 no bloom, 2 lower DPR, 3 no shadows + fewer petals
@@ -68,6 +68,7 @@ function applyQuality() {
   renderer.shadowMap.enabled = qualityLevel < 3 && !weak;
   scene.traverse((o) => { if (o.isLight && o.userData.keySpot) o.castShadow = qualityLevel < 3; });
   for (const s of exhibitSpots) s.intensity = qualityLevel >= 3 ? s.userData.baseIntensity * 0.6 : s.userData.baseIntensity;
+  for (const s of accentLights) s.intensity = qualityLevel >= 3 ? s.userData.baseIntensity * 0.6 : s.userData.baseIntensity;
 }
 function resize() {
   camera.aspect = innerWidth / innerHeight;
@@ -82,30 +83,30 @@ addEventListener('resize', resize);
 // ---------- lights: layered, not stacked (base / architectural / exhibit / follow / accent) ----------
 // Base fill: controlled hemisphere, warm sky / dark ground — enough to
 // orient in dark corners, never a flat wash that whites the walls out.
-const hemi = new THREE.HemisphereLight(0xfff2dd, 0x201812, 0.5); scene.add(hemi);
+const hemi = new THREE.HemisphereLight(0xfff2dd, 0x3a2c20, 0.95); scene.add(hemi);
 // Outdoor directional (plaza, cool moonlight against warm interior).
-const moon = new THREE.DirectionalLight(0x9fb4ff, 0.55); moon.position.set(-10, 16, 20); scene.add(moon);
+const moon = new THREE.DirectionalLight(0x9fb4ff, 0.85); moon.position.set(-10, 16, 20); scene.add(moon);
 // Architectural: forecourt lamps (warm-white).
-const lampL = new THREE.PointLight(0xffc27a, 30, 16, 2); lampL.position.set(-4, 4.5, 8); scene.add(lampL);
+const lampL = new THREE.PointLight(0xffc27a, 55, 16, 2); lampL.position.set(-4, 4.5, 8); scene.add(lampL);
 const lampR = lampL.clone(); lampR.position.x = 4; scene.add(lampR);
 // Key interior spot (lobby, the only shadow-casting spot — selective shadows).
-const keySpot = new THREE.SpotLight(0xffd9a0, 110, 20, 0.75, 0.6, 1.7);
+const keySpot = new THREE.SpotLight(0xffd9a0, 160, 20, 0.75, 0.6, 1.7);
 keySpot.position.set(0, 6.8, -6); keySpot.target.position.set(0, 0, -6);
 keySpot.userData.keySpot = true; keySpot.castShadow = true; keySpot.shadow.mapSize.set(1024, 1024); keySpot.shadow.bias = -0.002;
 scene.add(keySpot, keySpot.target);
 // Central hall spot (no shadow, warm-white architectural light).
-const centralSpot = new THREE.SpotLight(0xffd9a0, 90, 20, 0.8, 0.6, 1.7);
+const centralSpot = new THREE.SpotLight(0xffd9a0, 140, 20, 0.8, 0.6, 1.7);
 centralSpot.position.set(0, 5.8, -22); centralSpot.target.position.set(0, 0, -22); scene.add(centralSpot, centralSpot.target);
 // Accent: two warm-white spots washing the VN MUSEUM sign.
 for (const x of [-3, 3]) {
-  const s = new THREE.SpotLight(0xfff0d0, 50, 12, 0.45, 0.8, 1.8);
+  const s = new THREE.SpotLight(0xfff0d0, 80, 12, 0.45, 0.8, 1.8);
   s.position.set(x, 6.5, 6); s.target.position.set(0, 5.7, 1.5); scene.add(s, s.target);
 }
 // Player-following cinematic SpotLight: ONE light + ONE target, created
 // once here and reused every frame (never recreated). Direction comes
 // from the player's world yaw, not from the camera alone. Position is
 // smoothed in the frame loop; see followSpot update there.
-const followSpot = new THREE.SpotLight(0xffe2b8, 85, 15, 0.55, 0.7, 1.6);
+const followSpot = new THREE.SpotLight(0xffe2b8, 110, 15, 0.55, 0.7, 1.6);
 followSpot.castShadow = false; // selective shadows: key spot casts, follow spot does not
 scene.add(followSpot, followSpot.target);
 const followPos = new THREE.Vector3(0, 2.7, 10.4);
@@ -122,10 +123,22 @@ function buildExhibitLights() {
     [0, 5.5, -28, 0, 2.4, -31.9],
   ];
   for (const [px, py, pz, tx, ty, tz] of zones) {
-    const s = new THREE.SpotLight(0xfff4e0, 45, 10, 0.55, 0.8, 1.8);
+    const s = new THREE.SpotLight(0xfff4e0, 70, 10, 0.55, 0.8, 1.8);
     s.position.set(px, py, pz); s.target.position.set(tx, ty, tz);
-    s.userData.baseIntensity = 45; scene.add(s, s.target); exhibitSpots.push(s);
+    s.userData.baseIntensity = 70; scene.add(s, s.target); exhibitSpots.push(s);
   }
+}
+
+// Colourful accents (tasteful, not a rainbow wash): three small
+// point lights, created once, that tint one gallery each — rose in the
+// west gallery, teal in the east gallery, soft lavender in the lobby.
+// Warm light still dominates; these only colour their own zones.
+const accentLights = [];
+for (const [color, intensity, x, y, z] of [
+  [0xff7a9a, 25, -13.5, 3.5, -20], [0x7adfd0, 25, 13.5, 3.5, -20], [0xc9a0ff, 18, 0, 4.5, -6],
+]) {
+  const a = new THREE.PointLight(color, intensity, 12, 2);
+  a.position.set(x, y, z); a.userData.baseIntensity = intensity; scene.add(a); accentLights.push(a);
 }
 
 // ---------- loading (never stuck at 0%: failures become placeholders) ----------
@@ -155,6 +168,7 @@ setTimeout(finishLoading, 10000); // hard fallback: a slow / failed photo never 
 let world = null;
 const me = new Human({ skin: 0xe0aa7e, hair: 0x241812, hairStyle: 'short', top: 0x7a1f2b, bottom: 0x2e2a26, shoes: 0x1d1712, female: false, name: 'me' });
 const her = new Human({ skin: 0xf0c4a0, hair: 0x3a2318, hairStyle: 'long', top: 0x8a2f3d, bottom: 0x3a2430, shoes: 0x241a1a, female: true, name: 'her' });
+me.kissDir = 1; her.kissDir = -1; // bench kiss: me looks toward +x, her toward -x
 me.root.position.set(0, 0, 9); her.root.position.set(1.3, 0, 9.6);
 me.yaw = her.yaw = Math.PI; me.root.rotation.y = her.root.rotation.y = Math.PI;
 scene.add(me.root, me.shadow, her.root, her.shadow);
@@ -171,6 +185,23 @@ let state = 'start', unlocked = false, cinematic = false, introT = 0;
 // player is far and not in the doorway). Angles are eased, never snapped.
 let doorOpen = 0, doorTarget = 0;
 let together = null; // null | 'sit' | 'dance'
+// Kiss state: null when idle; { t } while a kiss is playing. Timing
+// (seconds): lean-in 0.8, hold 2.2 (total to 3.0), return 0.8 (ends 3.8).
+// kissAmount is the blended pose amount, eased by the character pose
+// system; on cancel it decays to 0 so no pose can stick.
+let kiss = null, kissAmount = 0;
+const smooth01 = (t) => { const c = Math.max(0, Math.min(1, t)); return c * c * (3 - 2 * c); };
+function kissCurve(t) {
+  if (t < 0.8) return smooth01(t / 0.8);
+  if (t < 3.0) return 1;
+  if (t < 3.8) return 1 - smooth01((t - 3.0) / 0.8);
+  return 0;
+}
+function startKiss() {
+  if (together !== 'sit' || kiss) return;
+  kiss = { t: 0 }; audio.blip();
+}
+function cancelKiss() { kiss = null; }
 let lockDismissedAt = 0, lastSay = 0, sayIdx = 0, nearestFrame = null;
 let walkTarget = null, bubbleEl = null, bubbleUntil = 0;
 const vel = new THREE.Vector3();
@@ -179,6 +210,20 @@ const tmpA = new THREE.Vector3(), tmpB = new THREE.Vector3(), tmpC = new THREE.V
 const marker = new THREE.Mesh(new THREE.RingGeometry(0.18, 0.26, 24),
   new THREE.MeshBasicMaterial({ color: 0xe6c27a, transparent: true, opacity: 0, depthWrite: false }));
 marker.rotation.x = -Math.PI / 2; marker.position.y = 0.02; scene.add(marker);
+// Kiss hearts: ONE shared geometry + material, 8 meshes created once
+// and reused (never created per frame). Hidden until a kiss is held.
+const heartShape = new THREE.Shape();
+heartShape.moveTo(0, 0.5); heartShape.bezierCurveTo(0, 0.8, -0.5, 0.8, -0.5, 0.5);
+heartShape.bezierCurveTo(-0.5, 0.2, 0, -0.1, 0, -0.4); heartShape.bezierCurveTo(0, -0.1, 0.5, 0.2, 0.5, 0.5);
+heartShape.bezierCurveTo(0.5, 0.8, 0, 0.8, 0, 0.5);
+const heartGeo = new THREE.ShapeGeometry(heartShape);
+const heartMat = new THREE.MeshBasicMaterial({ color: 0xff7a9a, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false });
+const hearts = [];
+for (let i = 0; i < 8; i++) {
+  const h = new THREE.Mesh(heartGeo, heartMat);
+  h.visible = false; h.scale.setScalar(0.22); scene.add(h);
+  hearts.push({ mesh: h, phase: i * 0.8, speed: 0.5 + (i % 3) * 0.15, xOff: (i - 3.5) * 0.22 });
+}
 
 function buildWorld() {
   if (built) return; built = true;
@@ -281,6 +326,7 @@ function closeViewer() {
 $('viewerClose').addEventListener('click', closeViewer);
 function sitTogether() {
   if (together === 'sit') {
+    cancelKiss();
     together = null; me.setState('idle'); her.setState('idle');
     $('sitBtn').textContent = '🪑 Sit together'; return;
   }
@@ -291,7 +337,9 @@ function sitTogether() {
   $('sitBtn').textContent = '🚶 Stand up'; audio.blip();
 }
 $('sitBtn').addEventListener('click', sitTogether);
+$('kissBtn').addEventListener('click', startKiss);
 function danceTogether() {
+  cancelKiss();
   if (together === 'dance') {
     together = null; me.setState('idle'); her.setState('idle');
     $('danceBtn').textContent = '💃 Dance with me'; return;
@@ -490,6 +538,37 @@ function frame() {
   }
   moveMe(dt);
   moveHer(dt);
+  // Kiss timeline + cancel: any exit from the seated-together state
+  // cancels immediately; kissAmount then decays so poses ease back.
+  if (together !== 'sit' && kiss) cancelKiss();
+  if (kiss) {
+    kiss.t += dt;
+    kissAmount = kissCurve(kiss.t);
+    if (kiss.t >= 3.8) { kiss = null; kissAmount = 0; }
+  } else if (kissAmount > 0.001) {
+    kissAmount += (0 - kissAmount) * (1 - Math.exp(-8 * dt));
+    if (kissAmount < 0.001) kissAmount = 0;
+  }
+  me.kiss = kissAmount; her.kiss = kissAmount;
+  if (together === 'sit' && kissAmount > 0) {
+    // Gentle slide toward each other on the bench (small, and only
+    // while seated — never a teleport, and positions restore on stand).
+    me.root.position.x = -0.55 + 0.17 * kissAmount;
+    her.root.position.x = 0.55 - 0.17 * kissAmount;
+  }
+  // Floating hearts during the hold (reused meshes only, no allocation).
+  {
+    const hold = kiss && kiss.t >= 0.8 && kiss.t < 3.0;
+    heartMat.opacity = hold ? 0.9 : 0;
+    for (const h of hearts) {
+      h.mesh.visible = !!hold;
+      if (hold) {
+        const rise = ((performance.now() / 1000) * h.speed + h.phase) % 1.4;
+        h.mesh.position.set(h.xOff + Math.sin(rise * 4 + h.phase) * 0.08, 2.1 + rise, -24.5);
+        h.mesh.scale.setScalar(0.18 + 0.08 * Math.sin(rise * 6 + h.phase));
+      }
+    }
+  }
   me.update(dt, { onStep: () => audio.footstep() });
   her.update(dt);
   // Lock proximity
@@ -517,6 +596,11 @@ function frame() {
     if (state === 'inside') $('danceBtn').classList.remove('hidden'); else $('danceBtn').classList.add('hidden');
   }
   if (together === 'sit') $('sitBtn').classList.remove('hidden');
+  // Kiss button: ONLY when both characters are seated together.
+  // together === 'sit' is set only by sitTogether(), which seats both
+  // at once — so walking, dancing, lock flow, or a single seated
+  // character can never show it. Standing/dancing cancels the kiss.
+  $('kissBtn').classList.toggle('hidden', together !== 'sit');
   // Marker fade
   if (marker.material.opacity > 0) marker.material.opacity = Math.max(0, marker.material.opacity - dt * 0.8);
   // Camera
@@ -578,5 +662,6 @@ window.__museum = {
   get state() { return state; }, get Q() { return { qualityLevel, dpr }; },
   go(x, z) { me.root.position.set(x, 0, z); her.root.position.set(x + 1, 0, z + 0.8); },
   setYaw(y, p) { cam.yaw = y; if (p !== undefined) cam.pitch = p; },
-  photo: (i) => openPhoto(i), sit: sitTogether,
+  photo: (i) => openPhoto(i), sit: sitTogether, kiss: startKiss,
+  get kissing() { return !!kiss; }, get kissAmount() { return kissAmount; },
 };

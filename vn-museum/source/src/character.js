@@ -104,6 +104,12 @@ export class Human {
     };
     this.state = 'idle'; this.speed = 0; this.phase = 0;
     this.yaw = 0; this.lookTarget = null; this.danceT = 0; this.t = Math.random() * 10;
+    // Kiss blend (0 = normal pose, 1 = full lean-in kiss pose). Set by
+    // main.js only while both characters are seated together; it decays
+    // back to 0 on cancel, so the pose can never stick. kissDir is +1
+    // for the character on the left of the bench (looking toward +x)
+    // and -1 for the character on the right (looking toward -x).
+    this.kiss = 0; this.kissDir = 0;
     this._pose = {}; // current eased pose values
     for (const k of Object.keys(this.j)) this._pose[k] = { x: 0, y: 0, z: 0 };
   }
@@ -214,6 +220,24 @@ export class Human {
       rel = Math.atan2(Math.sin(rel), Math.cos(rel));
       P.neck.y = clamp(rel, -0.7, 0.7);
       P.neck.x = -0.08;
+    }
+    // Kiss pose (tasteful lean-in, heads turned toward each other):
+    // blended on top of the sit pose by kiss amount, so it eases in and
+    // out through the normal pose-blending rate — never a snap. Spine
+    // leans toward the partner (rotation about z leans the torso toward
+    // -x for a positive angle, so the sign flips with kissDir), the
+    // head turns toward the partner (rotation about y) and tilts
+    // gently toward them. No explicit content: heads simply meet.
+    if (this.kiss > 0.001 && this.kissDir !== 0) {
+      const k = this.kiss, d = this.kissDir;
+      P.spine.x += 0.16 * k;
+      P.spine.z += -d * 0.22 * k;
+      P.chest.z += -d * 0.12 * k;
+      P.chest.x += 0.06 * k;
+      P.neck.y = d * 0.65 * k;
+      P.neck.x = -0.05 * k;
+      P.neck.z = -d * 0.20 * k;
+      P.shoulderL.x -= 0.15 * k; P.shoulderR.x -= 0.15 * k;
     }
     this._applyPose(P, dt, rate);
     this.root.position.y = bob;
