@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>NEBULA — Cinematic 3D Space Exploration</title>
+  <script type="module" crossorigin src="./assets/index-Cl31SRB-.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-C6b8buem.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="scene"></canvas>
+
+  <!-- Loading / warp transition: transform + opacity only, 250ms ease-out -->
+  <div id="loader" class="overlay">
+    <div class="loader-inner">
+      <h1>NEBULA</h1>
+      <p>Cinematic 3D space exploration</p>
+      <div class="loadbar"><div id="loadfill"></div></div>
+      <p id="loadmsg">Initialising renderer…</p>
+    </div>
+  </div>
+  <div id="warp" class="overlay warp-hidden" aria-hidden="true"><p id="warpmsg">WARP</p></div>
+
+  <!-- Top navigation: every button works -->
+  <header id="topbar">
+    <div class="brand">NEBULA <span>DEEP SPACE // SECTOR 7</span></div>
+    <nav id="nav">
+      <button data-mode="cockpit" class="navbtn active">Cockpit</button>
+      <button data-mode="planet" class="navbtn">Planets</button>
+      <button data-mode="station" class="navbtn">Station</button>
+      <button data-mode="blackhole" class="navbtn">Black Hole</button>
+    </nav>
+    <div class="topright">
+      <button id="missionBtn">Missions <span id="missionCount">0/4</span></button>
+      <button id="settingsBtn">Settings</button>
+    </div>
+  </header>
+
+  <!-- Cockpit instruments -->
+  <div id="hud" class="panel">
+    <div class="gauge"><label>Velocity</label><strong id="vel">0</strong><span> km/s</span><div class="bar"><i id="velbar"></i></div></div>
+    <div class="gauge"><label>Shield</label><strong id="shield">100%</strong><div class="bar"><i id="shieldbar"></i></div></div>
+    <div class="gauge"><label>Fuel</label><strong id="fuel">100%</strong><div class="bar amber"><i id="fuelbar"></i></div></div>
+    <div class="gauge"><label>Target</label><strong id="targetName">Ember Prime</strong><span id="targetDist">—</span></div>
+    <div class="gauge"><label>Heading</label><strong id="heading">000°</strong></div>
+  </div>
+
+  <!-- Planet selector + travel -->
+  <div id="planetPanel" class="panel">
+    <h2>Select destination</h2>
+    <p class="hint">Pick a planet, then travel. Travel is a real camera transition, not a cut to a picture.</p>
+    <div id="planetCards"></div>
+    <button id="travelBtn" class="primary">Travel to selected planet</button>
+    <button id="stationBtn" class="secondary">Dock at station</button>
+    <p id="planetDesc"></p>
+  </div>
+
+  <!-- Station controls hint + interact prompt -->
+  <div id="stationHud" class="panel hidden">
+    <p><b>WASD</b> move &nbsp; <b>Shift</b> run &nbsp; <b>Drag</b> look &nbsp; <b>E</b> interact &nbsp; <b>Touch:</b> left joystick</p>
+    <p id="interactPrompt" class="hidden">Press <b>E</b> / tap Interact</p>
+  </div>
+
+  <!-- Black hole panel -->
+  <div id="bhPanel" class="panel hidden">
+    <h2>Singularity K-7</h2>
+    <p>Rotating accretion disk, layered particles and a lensing ring. Drag to orbit. Scroll / pinch to change distance. Do not fly closer than the photon ring in the fiction — the camera is clamped for safety.</p>
+    <button id="bhOrbitBtn" class="primary">Auto-orbit: on</button>
+  </div>
+
+  <!-- Missions -->
+  <div id="missionPanel" class="panel drawer hidden">
+    <h2>Mission objectives</h2>
+    <ul id="missionList"></ul>
+    <p id="missionDone" class="hidden">All objectives complete. Sector 7 surveyed.</p>
+    <button id="missionClose" class="secondary">Close</button>
+  </div>
+
+  <!-- Terminal / info dialog -->
+  <div id="dialog" class="panel drawer hidden">
+    <h2 id="dialogTitle">Terminal</h2>
+    <p id="dialogBody"></p>
+    <button id="dialogClose" class="primary">Close</button>
+  </div>
+
+  <!-- Settings -->
+  <div id="settingsPanel" class="panel drawer hidden">
+    <h2>Settings</h2>
+    <label>Quality
+      <select id="qualitySel">
+        <option value="auto" selected>Auto (adaptive)</option>
+        <option value="high">High</option>
+        <option value="medium">Medium</option>
+        <option value="low">Low</option>
+      </select>
+    </label>
+    <label><input type="checkbox" id="fpsToggle" checked /> Show FPS counter</label>
+    <label><input type="checkbox" id="motionToggle" checked /> Reduce motion (calmer transitions)</label>
+    <label>Mouse / look sensitivity <input type="range" id="sensRange" min="0.2" max="2" step="0.1" value="1" /></label>
+    <label>Ship thrust <input type="range" id="thrustRange" min="0" max="100" step="1" value="35" /></label>
+    <button id="resetBtn" class="secondary">Reset missions</button>
+    <button id="settingsClose" class="primary">Done</button>
+    <p class="hint">Quality changes pixel ratio and star density live. Auto drops quality if measured FPS stays low.</p>
+  </div>
+
+  <div id="fps">— FPS · — ms</div>
+  <div id="toast"></div>
+
+  <!-- Mobile controls: joystick + interact + run -->
+  <div id="mobile">
+    <div id="joy"><div id="joyKnob"></div></div>
+    <div class="mbtns">
+      <button id="interactBtn">Interact</button>
+      <button id="runBtn">Run</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
