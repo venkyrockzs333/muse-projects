@@ -1,120 +1,96 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
+<meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-<title>NEBULA — Cinematic 3D Space Exploration</title>
-  <script type="module" crossorigin src="./assets/index-Cl31SRB-.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-C6b8buem.css">
+<meta name="theme-color" content="#050914" />
+<title>NEBULA — Deep Space Exploration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./style.css">
 </head>
 <body>
-<div id="app">
-  <canvas id="scene"></canvas>
-
-  <!-- Loading / warp transition: transform + opacity only, 250ms ease-out -->
-  <div id="loader" class="overlay">
-    <div class="loader-inner">
-      <h1>NEBULA</h1>
-      <p>Cinematic 3D space exploration</p>
-      <div class="loadbar"><div id="loadfill"></div></div>
-      <p id="loadmsg">Initialising renderer…</p>
-    </div>
-  </div>
-  <div id="warp" class="overlay warp-hidden" aria-hidden="true"><p id="warpmsg">WARP</p></div>
-
-  <!-- Top navigation: every button works -->
-  <header id="topbar">
-    <div class="brand">NEBULA <span>DEEP SPACE // SECTOR 7</span></div>
-    <nav id="nav">
-      <button data-mode="cockpit" class="navbtn active">Cockpit</button>
-      <button data-mode="planet" class="navbtn">Planets</button>
-      <button data-mode="station" class="navbtn">Station</button>
-      <button data-mode="blackhole" class="navbtn">Black Hole</button>
-    </nav>
-    <div class="topright">
-      <button id="missionBtn">Missions <span id="missionCount">0/4</span></button>
-      <button id="settingsBtn">Settings</button>
-    </div>
-  </header>
-
-  <!-- Cockpit instruments -->
-  <div id="hud" class="panel">
-    <div class="gauge"><label>Velocity</label><strong id="vel">0</strong><span> km/s</span><div class="bar"><i id="velbar"></i></div></div>
-    <div class="gauge"><label>Shield</label><strong id="shield">100%</strong><div class="bar"><i id="shieldbar"></i></div></div>
-    <div class="gauge"><label>Fuel</label><strong id="fuel">100%</strong><div class="bar amber"><i id="fuelbar"></i></div></div>
-    <div class="gauge"><label>Target</label><strong id="targetName">Ember Prime</strong><span id="targetDist">—</span></div>
-    <div class="gauge"><label>Heading</label><strong id="heading">000°</strong></div>
-  </div>
-
-  <!-- Planet selector + travel -->
-  <div id="planetPanel" class="panel">
-    <h2>Select destination</h2>
-    <p class="hint">Pick a planet, then travel. Travel is a real camera transition, not a cut to a picture.</p>
-    <div id="planetCards"></div>
-    <button id="travelBtn" class="primary">Travel to selected planet</button>
-    <button id="stationBtn" class="secondary">Dock at station</button>
-    <p id="planetDesc"></p>
-  </div>
-
-  <!-- Station controls hint + interact prompt -->
-  <div id="stationHud" class="panel hidden">
-    <p><b>WASD</b> move &nbsp; <b>Shift</b> run &nbsp; <b>Drag</b> look &nbsp; <b>E</b> interact &nbsp; <b>Touch:</b> left joystick</p>
-    <p id="interactPrompt" class="hidden">Press <b>E</b> / tap Interact</p>
-  </div>
-
-  <!-- Black hole panel -->
-  <div id="bhPanel" class="panel hidden">
-    <h2>Singularity K-7</h2>
-    <p>Rotating accretion disk, layered particles and a lensing ring. Drag to orbit. Scroll / pinch to change distance. Do not fly closer than the photon ring in the fiction — the camera is clamped for safety.</p>
-    <button id="bhOrbitBtn" class="primary">Auto-orbit: on</button>
-  </div>
-
-  <!-- Missions -->
-  <div id="missionPanel" class="panel drawer hidden">
-    <h2>Mission objectives</h2>
-    <ul id="missionList"></ul>
-    <p id="missionDone" class="hidden">All objectives complete. Sector 7 surveyed.</p>
-    <button id="missionClose" class="secondary">Close</button>
-  </div>
-
-  <!-- Terminal / info dialog -->
-  <div id="dialog" class="panel drawer hidden">
-    <h2 id="dialogTitle">Terminal</h2>
-    <p id="dialogBody"></p>
-    <button id="dialogClose" class="primary">Close</button>
-  </div>
-
-  <!-- Settings -->
-  <div id="settingsPanel" class="panel drawer hidden">
-    <h2>Settings</h2>
-    <label>Quality
-      <select id="qualitySel">
-        <option value="auto" selected>Auto (adaptive)</option>
-        <option value="high">High</option>
-        <option value="medium">Medium</option>
-        <option value="low">Low</option>
-      </select>
-    </label>
-    <label><input type="checkbox" id="fpsToggle" checked /> Show FPS counter</label>
-    <label><input type="checkbox" id="motionToggle" checked /> Reduce motion (calmer transitions)</label>
-    <label>Mouse / look sensitivity <input type="range" id="sensRange" min="0.2" max="2" step="0.1" value="1" /></label>
-    <label>Ship thrust <input type="range" id="thrustRange" min="0" max="100" step="1" value="35" /></label>
-    <button id="resetBtn" class="secondary">Reset missions</button>
-    <button id="settingsClose" class="primary">Done</button>
-    <p class="hint">Quality changes pixel ratio and star density live. Auto drops quality if measured FPS stays low.</p>
-  </div>
-
-  <div id="fps">— FPS · — ms</div>
-  <div id="toast"></div>
-
-  <!-- Mobile controls: joystick + interact + run -->
-  <div id="mobile">
-    <div id="joy"><div id="joyKnob"></div></div>
-    <div class="mbtns">
-      <button id="interactBtn">Interact</button>
-      <button id="runBtn">Run</button>
-    </div>
-  </div>
+<div id="boot">
+  <div class="boot-mark">N<span>•</span></div>
+  <div class="boot-title">NEBULA <span>EXPLORATION SYSTEM</span></div>
+  <div class="boot-track"><i id="boot-progress"></i></div>
+  <div id="boot-status">INITIALIZING NAVIGATION SYSTEMS</div>
 </div>
+
+<canvas id="scene"></canvas>
+<div class="grain"></div>
+<div class="vignette"></div>
+
+<header class="topbar">
+  <a class="brand" href="#" aria-label="Nebula home"><span class="brand-symbol">✳</span><span>NEBULA<small>DEEP SPACE INITIATIVE</small></span></a>
+  <div class="top-center"><span class="live-dot"></span> SYSTEM ONLINE <span class="top-sep">/</span> SECTOR <b id="sector-code">09–A</b></div>
+  <div class="top-right"><span class="connection"><i></i><i></i><i></i><i></i></span><span id="clock">00:00:00 UTC</span><button id="settings-open" class="icon-button" title="Settings">⚙</button></div>
+</header>
+
+<main class="layout">
+  <aside class="left-rail glass">
+    <div class="rail-label">MISSION CONTROL</div>
+    <button class="nav-item active" data-mode="cockpit"><span class="nav-icon">⌘</span><span>Bridge</span><small>01</small></button>
+    <button class="nav-item" data-mode="planets"><span class="nav-icon">◉</span><span>Planets</span><small>02</small></button>
+    <button class="nav-item" data-mode="station"><span class="nav-icon">⌬</span><span>Station</span><small>03</small></button>
+    <button class="nav-item" data-mode="blackhole"><span class="nav-icon">◌</span><span>Anomaly</span><small>04</small></button>
+    <div class="rail-bottom"><div class="avatar">N</div><div><b>EXPLORER 07</b><small>FLIGHT AUTHORIZED</small></div></div>
+  </aside>
+
+  <section class="hero">
+    <div class="eyebrow"><span class="eyebrow-line"></span><span id="eyebrow-text">FLIGHT DECK // ORBITAL VIEW</span></div>
+    <h1 id="scene-title">Beyond the<br><em>known.</em></h1>
+    <p id="scene-description">A new frontier begins where the familiar ends. Chart the unknown, discover distant worlds, and look deeper into the cosmos.</p>
+    <div class="hero-actions">
+      <button id="primary-action" class="primary-button"><span>↗</span> INITIATE EXPLORATION</button>
+      <button id="view-toggle" class="secondary-button">CHANGE VIEW <span>↻</span></button>
+    </div>
+    <div class="scene-index"><span id="scene-index">01</span><div class="index-line"><i></i></div><span>04 EXPERIENCES</span></div>
+  </section>
+
+  <aside class="right-panel glass">
+    <div class="panel-head"><span>FLIGHT TELEMETRY</span><span class="panel-live">LIVE</span></div>
+    <div class="telemetry-main"><div class="telemetry-label">CURRENT LOCATION</div><div class="telemetry-value" id="location-name">ORBITAL BRIDGE</div><div class="telemetry-sub" id="location-sub">EARTH-LUNA LAGRANGE POINT</div></div>
+    <div class="telemetry-grid">
+      <div class="metric"><span>VELOCITY</span><b id="velocity">0.00 <small>AU/s</small></b><div class="metric-bar"><i style="width:34%"></i></div></div>
+      <div class="metric"><span>HULL INTEGRITY</span><b>98.7<small>%</small></b><div class="metric-bar"><i style="width:98%"></i></div></div>
+      <div class="metric"><span>O₂ RESERVE</span><b>72<small>HRS</small></b><div class="metric-bar"><i style="width:72%"></i></div></div>
+      <div class="metric"><span>FRAME RATE</span><b id="fps">-- <small>FPS</small></b><div class="metric-bar"><i id="fps-bar" style="width:65%"></i></div></div>
+    </div>
+    <div class="panel-divider"></div>
+    <div class="panel-head"><span>ACTIVE OBJECTIVE</span><span class="objective-num">01 / 03</span></div>
+    <div class="objective"><div class="objective-icon">◎</div><div><b id="objective-title">Map the outer rim</b><p id="objective-desc">Survey the surrounding star field and identify a viable destination.</p></div></div>
+    <button id="objective-complete" class="objective-button">MARK OBJECTIVE COMPLETE <span>↗</span></button>
+  </aside>
+</main>
+
+<div class="bottom-hud">
+  <div class="hud-coordinates"><span class="hud-label">COORDINATES</span><b id="coords">X +028.41 <i>/</i> Y −004.09 <i>/</i> Z +019.62</b></div>
+  <div class="hud-hint"><span class="keycap">W</span><span class="keycap">A</span><span class="keycap">S</span><span class="keycap">D</span><span class="hint-text">MOVE CAMERA</span><span class="keycap wide">DRAG</span><span class="hint-text">ROTATE VIEW</span></div>
+  <div class="hud-status"><span class="live-dot"></span> ALL SYSTEMS NOMINAL</div>
+</div>
+
+<div id="planet-picker" class="planet-picker glass hidden">
+  <div class="picker-top"><div><span class="eyebrow-line"></span> DESTINATION SELECTOR</div><button id="close-picker" class="icon-button">×</button></div>
+  <h2>Choose your <em>next world.</em></h2>
+  <div class="planet-cards">
+    <button class="planet-card selected" data-planet="aurelia"><span class="planet-art aurelia"></span><span class="planet-card-text"><b>AURELIA</b><small>TERRESTRIAL / CLASS M</small><i>01</i></span></button>
+    <button class="planet-card" data-planet="nyx"><span class="planet-art nyx"></span><span class="planet-card-text"><b>NYX-9</b><small>ICE GIANT / CLASS H</small><i>02</i></span></button>
+    <button class="planet-card" data-planet="cinder"><span class="planet-art cinder"></span><span class="planet-card-text"><b>CINDER</b><small>VOLCANIC / CLASS X</small><i>03</i></span></button>
+  </div>
+  <button id="travel-button" class="primary-button full">SET COURSE <span>↗</span></button>
+</div>
+
+<div id="station-controls" class="station-controls hidden"><div class="control-title">EXPLORER MOVEMENT</div><div id="joystick" class="joystick"><div id="joystick-knob"></div></div><div class="control-note">DRAG TO MOVE</div><button id="interact-button" class="secondary-button">INTERACT <span>E</span></button></div>
+
+<div id="settings-modal" class="modal hidden"><div class="modal-card glass"><div class="modal-heading"><div><span class="eyebrow-line"></span> SYSTEM CONFIGURATION<h2>Flight <em>settings.</em></h2></div><button id="settings-close" class="icon-button">×</button></div>
+  <label class="setting-row"><span><b>Motion quality</b><small>Lower quality can improve performance.</small></span><select id="quality"><option value="high">High</option><option value="medium">Balanced</option><option value="low">Performance</option></select></label>
+  <label class="setting-row"><span><b>Bloom effect</b><small>Soft light around bright objects.</small></span><input id="bloom-toggle" type="checkbox" checked></label>
+  <label class="setting-row"><span><b>Camera sensitivity</b><small>Mouse and touch rotation.</small></span><input id="sensitivity" type="range" min="0.3" max="2" step="0.1" value="1"></label>
+  <div class="modal-footer">SETTINGS APPLY IMMEDIATELY <button id="reset-camera" class="secondary-button">RESET CAMERA ↺</button></div>
+</div></div>
+
+<div id="toast" class="toast"></div>
+<script type="module" src="./app.js"></script>
 </body>
 </html>
